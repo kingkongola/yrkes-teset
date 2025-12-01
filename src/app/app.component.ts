@@ -1,9 +1,10 @@
 import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.css'],
+    standalone: false
 })
 export class AppComponent implements AfterViewInit {
   // Strängar för att visa resultatet i template
