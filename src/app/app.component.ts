@@ -51,4 +51,66 @@ export class AppComponent implements AfterViewInit {
       console.error('Metoden clearMultiSelection är inte tillgänglig.');
     }
   }
+
+  // --- Playground / Alla features ---
+  @ViewChild('playgroundSelect') playgroundSelect!: ElementRef<any>;
+
+  // Properties
+  pgLabel = 'Playground Yrkesväljare';
+  pgLabelDescription = 'Testa alla inställningar här';
+  pgPlaceholder = 'Sök yrke...';
+  pgEnableMultiple = true;
+  pgRequireSelection = false;
+  pgShowSearchIcon = true;
+  pgMinLength = 3;
+  pgMaxResults = 10;
+  pgErrorMessage = '';
+  
+  // Logs
+  pgLogs: string[] = [];
+
+  // Event handlers
+  handlePgSelection(event: any): void {
+    this.log(`Selection: ${JSON.stringify(event.detail)}`);
+  }
+
+  handlePgStatusChange(event: any): void {
+    this.log(`StatusChange: ${JSON.stringify(event.detail)}`);
+  }
+
+  handlePgDataLoadFailed(event: any): void {
+    this.log(`DataLoadFailed: ${JSON.stringify(event.detail)}`);
+  }
+
+  handlePgValidationChange(event: any): void {
+    this.log(`ValidationChange: ${JSON.stringify(event.detail)}`);
+  }
+
+  // Methods
+  async pgValidate(): Promise<void> {
+    if (this.playgroundSelect?.nativeElement) {
+      const isValid = await this.playgroundSelect.nativeElement.validate();
+      this.log(`Validate() result: ${isValid}`);
+    }
+  }
+
+  async pgSetValueById(id: string): Promise<void> {
+    if (this.playgroundSelect?.nativeElement) {
+      await this.playgroundSelect.nativeElement.setValue(id);
+      this.log(`setValue('${id}') called`);
+    }
+  }
+
+  async pgClear(): Promise<void> {
+    if (this.playgroundSelect?.nativeElement) {
+      await this.playgroundSelect.nativeElement.clearMultiSelection();
+      this.log('clearMultiSelection() called');
+    }
+  }
+
+  private log(message: string): void {
+    const timestamp = new Date().toLocaleTimeString();
+    this.pgLogs.unshift(`[${timestamp}] ${message}`);
+    if (this.pgLogs.length > 20) this.pgLogs.pop();
+  }
 }

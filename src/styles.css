@@ -1,1 +1,102 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global Styles & Variables - Teletubbies Happy Theme 2025 */
+:root {
+  /* Color Palette - Teletubbies Inspired */
+  --af-navy: #5d2e8c; /* Tinky Winky Purple (Primary Dark) */
+  --af-dark-blue: #4b0082;
+  --af-blue: #00bfff; /* Sky Blue */
+  --af-light-blue: #87ceeb;
+  --af-neon-green: #76c900; /* Dipsy Green */
+  --af-neon-purple: #d65db1; /* Playful Pink/Purple */
+  --af-yellow: #f9d500; /* Laa-Laa Yellow */
+  --af-red: #e6332a; /* Po Red */
+  
+  /* Backgrounds */
+  --bg-dark: #e0f7fa; /* Light Sky Background */
+  --bg-card: rgba(255, 255, 255, 0.65);
+  --bg-card-hover: rgba(255, 255, 255, 0.85);
+  
+  /* Text */
+  --text-primary: #4a4a4a; /* Soft Dark Gray */
+  --text-secondary: #666666;
+  --text-muted: #888888;
+  
+  /* AF Specific Mappings */
+  --af-text-light: var(--text-primary);
+  --af-text-dim: var(--text-secondary);
+  --af-neon-blue: #0099cc; /* Stronger Blue for text visibility */
+  --af-glass-bg: rgba(255, 255, 255, 0.5);
+  
+  /* Borders & Glass */
+  --glass-border: rgba(255, 255, 255, 0.8);
+  --glass-shine: rgba(255, 255, 255, 0.9);
+  --af-glass-border: var(--glass-border);
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 4rem;
+  
+  /* Radius - Extra Round for Friendliness */
+  --radius-sm: 16px;
+  --radius-md: 32px;
+  --radius-lg: 48px;
+  
+  /* Typography */
+  --font-main: 'Comic Neue', 'Varela Round', 'Segoe UI', sans-serif;
+  --font-mono: 'Fira Code', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  margin-bottom: var(--spacing-md);
+  color: var(--af-navy);
+}
+
+h1 {
+  font-size: 3rem;
+  background: linear-gradient(90deg, var(--af-navy), var(--af-neon-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 2px 2px 0px rgba(255,255,255,0.5);
+}
+
+button {
+  cursor: pointer;
+  font-family: var(--font-main);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fff;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--af-yellow);
+  border-radius: 10px;
+  border: 3px solid #fff;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--af-neon-green);
+}

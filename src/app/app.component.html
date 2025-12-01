@@ -1,26 +1,164 @@
-<!-- Enkelval -->
-<h1>Yrkesväljaren enkelval</h1>
-<yrkes-valjaren
-  yv-label="Sök och välj ett yrke"
-  (yrkesvaljareSelection)="handleSelection($event)"
->
-</yrkes-valjaren>
-<pre>Mottagen data från yrkesvaljareSelection:
-{{ singleSelectionResult }}</pre>
+<div class="app-background"></div>
 
-<hr style="margin: 2rem 0; border: 1px solid #e9ecef;">
+<div class="app-container">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="logo-container">
+      <div class="logo-icon">AF</div>
+      <div class="logo-text">
+        <span class="brand">Arbetsförmedlingen</span>
+        <span class="version">v2030.1.0</span>
+      </div>
+    </div>
+    <h1 class="page-title">Yrkesväljaren <span class="highlight">Demo</span></h1>
+  </header>
 
-<!-- Flerval -->
-<h1>Yrkesväljaren flerval</h1>
-<yrkes-valjaren
-  #multiSelect
-  yv-label="Välj ett eller flera yrken"
-  yv-enable-multiple="true"
-  (yrkesvaljareSelection)="handleMultiSelection($event)"
->
-</yrkes-valjaren>
-<pre>Mottagen data från yrkesvaljareSelection:
-{{ multiSelectionResult }}</pre>
-<br>
-<button (click)="setPreselected()">Sätt till 'Läkare' och 'Sjuksköterska'</button>
-<button (click)="clearSelection()">Rensa val</button>
+  <div class="main-grid">
+    <!-- Enkelval Card -->
+    <section class="glass-card">
+      <div class="card-header">
+        <h2>Enkelval</h2>
+        <span class="badge glow">Standard</span>
+      </div>
+      
+      <yrkes-valjaren
+        yv-label="Sök och välj ett yrke"
+        (yrkesvaljareSelection)="handleSelection($event)"
+      >
+      </yrkes-valjaren>
+
+      <div class="result-display">
+        <span class="result-label">Resultat</span>
+        <div class="code-block">{{ singleSelectionResult }}</div>
+      </div>
+    </section>
+
+    <!-- Flerval Card -->
+    <section class="glass-card">
+      <div class="card-header">
+        <h2>Flerval</h2>
+        <span class="badge">Multi-Select</span>
+      </div>
+
+      <yrkes-valjaren
+        #multiSelect
+        yv-label="Välj ett eller flera yrken"
+        yv-enable-multiple="true"
+        (yrkesvaljareSelection)="handleMultiSelection($event)"
+      >
+      </yrkes-valjaren>
+
+      <div class="result-display">
+        <span class="result-label">Resultat</span>
+        <div class="code-block">{{ multiSelectionResult }}</div>
+      </div>
+
+      <div class="action-bar">
+        <button class="btn btn-primary" (click)="setPreselected()">
+          <span>Sätt förval</span>
+        </button>
+        <button class="btn btn-secondary" (click)="clearSelection()">
+          <span>Rensa</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Playground Card -->
+    <section class="glass-card full-width">
+      <div class="card-header">
+        <h2>Playground</h2>
+        <span class="badge glow">Interactive</span>
+      </div>
+
+      <div class="playground-layout">
+        <!-- Settings Panel -->
+        <div class="settings-panel">
+          <h3>Konfiguration</h3>
+          
+          <div class="input-group">
+            <label>Label</label>
+            <input type="text" [(ngModel)]="pgLabel" class="modern-input">
+          </div>
+
+          <div class="input-group">
+            <label>Beskrivning</label>
+            <input type="text" [(ngModel)]="pgLabelDescription" class="modern-input">
+          </div>
+
+          <div class="row-group">
+            <div class="input-group">
+              <label>Placeholder</label>
+              <input type="text" [(ngModel)]="pgPlaceholder" class="modern-input">
+            </div>
+            <div class="input-group">
+              <label>Min Längd</label>
+              <input type="number" [(ngModel)]="pgMinLength" class="modern-input">
+            </div>
+          </div>
+
+          <div class="toggles-group">
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="pgEnableMultiple">
+              <span class="slider"></span>
+              <span class="label-text">Flerval</span>
+            </label>
+
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="pgRequireSelection">
+              <span class="slider"></span>
+              <span class="label-text">Obligatorisk</span>
+            </label>
+
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="pgShowSearchIcon">
+              <span class="slider"></span>
+              <span class="label-text">Sökikon</span>
+            </label>
+          </div>
+
+          <div class="button-grid">
+            <button class="btn btn-small" (click)="pgValidate()">Validera</button>
+            <button class="btn btn-small" (click)="pgClear()">Rensa</button>
+            <button class="btn btn-small" (click)="pgSetValueById('SSYK-2012-2212')">Välj Läkare</button>
+          </div>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="preview-panel">
+          <div class="component-stage">
+            <yrkes-valjaren
+              #playgroundSelect
+              [attr.yv-label]="pgLabel"
+              [attr.yv-label-description]="pgLabelDescription"
+              [attr.yv-placeholder]="pgPlaceholder"
+              [attr.yv-error-message]="pgErrorMessage"
+              [attr.yv-min-length]="pgMinLength"
+              [attr.yv-max-results]="pgMaxResults"
+              [attr.yv-enable-multiple]="pgEnableMultiple"
+              [attr.yv-require-selection]="pgRequireSelection"
+              [attr.yv-show-search-icon]="pgShowSearchIcon"
+              (yrkesvaljareSelection)="handlePgSelection($event)"
+              (yrkesvaljareStatusChange)="handlePgStatusChange($event)"
+              (yvDataLoadFailed)="handlePgDataLoadFailed($event)"
+              (yvValidationChange)="handlePgValidationChange($event)"
+            >
+            </yrkes-valjaren>
+          </div>
+
+          <div class="logs-panel">
+            <div class="logs-header">
+              <span>Event Log</span>
+              <div class="live-indicator"></div>
+            </div>
+            <div class="logs-content">
+              <div *ngFor="let log of pgLogs" class="log-entry">
+                <span class="log-time">{{ log.substring(1, 9) }}</span>
+                <span class="log-message">{{ log.substring(11) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
