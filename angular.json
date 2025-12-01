@@ -53,7 +53,8 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.css"
+              "src/styles.css",
+              "node_modules/@designsystem-se/af/dist/digi-arbetsformedlingen/digi-arbetsformedlingen.css"
             ],
             "scripts": [],
             "server": "src/main.server.ts",
@@ -124,5 +125,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }
