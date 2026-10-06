@@ -50,7 +50,12 @@
             "tsConfig": "tsconfig.app.json",
             "assets": [
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              {
+                "glob": "**/*.json",
+                "input": "node_modules/@taxonomy/kompetensvaljaren-data-v27/dist",
+                "output": "/assets/kompetensvaljaren"
+              }
             ],
             "styles": [
               "src/styles.css",

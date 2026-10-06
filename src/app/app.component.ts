@@ -1,116 +1,105 @@
 import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 
 @Component({
-    selector: 'app-root',
-    templateUrl: './app.component.html',
-    styleUrls: ['./app.component.css'],
-    standalone: false
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
+  standalone: false,
 })
 export class AppComponent implements AfterViewInit {
-  // Strängar för att visa resultatet i template
-  singleSelectionResult = 'Väntar på val...';
   multiSelectionResult = 'Väntar på val...';
+  skillSelectionResult = 'Väntar på val...';
+  selectedOccupationId = '';
+  selectedInputIds = '';
+  contextSummary = 'Ingen yrkeskontext vald';
+  popularSummary = 'Välj ett yrke för att visa rekommenderade kompetenser.';
+  showPopular = false;
 
-  // Få en referens till flervals-komponenten för att kunna anropa metoder på den
   @ViewChild('multiSelect') multiSelectBox!: ElementRef<any>;
 
   ngAfterViewInit(): void {
-    // Komponenten behöver initieras innan vi kan interagera med den programmatiskt.
-    // Vi använder en liten timeout för att säkerställa att den är redo.
-    // I en mer komplex applikation kan man använda mer robusta metoder.
-    setTimeout(() => {
-      console.log('Yrkesväljaren (flerval) är redo.');
-    }, 1000);
+    setTimeout(() => console.log('Yrkesväljaren (flerval) är redo.'), 1000);
   }
 
-  // Hanterar val från enkelvals-komponenten
-  handleSelection(event: any): void {
-    this.singleSelectionResult = JSON.stringify(event.detail, null, 2);
-  }
-
-  // Hanterar val från flervals-komponenten
   handleMultiSelection(event: any): void {
     this.multiSelectionResult = JSON.stringify(event.detail, null, 2);
+    this.setOccupationContext(event.detail);
   }
 
-  // Exempel på programmatisk värdesättning
+  handleSkillSelection(event: any): void {
+    this.skillSelectionResult = JSON.stringify(event.detail, null, 2);
+  }
+
+  private setOccupationContext(selection: any): void {
+    const contexts = (Array.isArray(selection) ? selection : [selection])
+      .map((item) => this.toKvContext(item))
+      .filter((context): context is { id: string; label: string } => !!context?.id)
+      .filter((context, index, list) => list.findIndex((candidate) => candidate.id === context.id) === index)
+      .slice(0, 5);
+
+    const first = contexts[0];
+    const extraIds = contexts.slice(1).map((context) => context.id).slice(0, 4);
+
+    this.selectedOccupationId = first?.id ?? '';
+    this.selectedInputIds = extraIds.join(',');
+    this.showPopular = contexts.length === 1;
+
+    if (contexts.length === 0) {
+      this.contextSummary = 'Ingen yrkeskontext vald';
+      this.popularSummary = 'Välj ett yrke för att visa rekommenderade kompetenser.';
+      return;
+    }
+
+    this.contextSummary = contexts
+      .map((context, index) => `${index + 1}. ${context.label || 'Yrkeskontext'} (${context.id})`)
+      .join('\n');
+
+    this.popularSummary = this.showPopular
+      ? 'Ett yrke valt: KV visar rekommenderade kompetenser för yrket.'
+      : 'Flera yrken valda: rekommenderade kompetenser är avstängda eftersom inget yrke är viktigare än de andra. Yrkena används som sökkontext.';
+  }
+
+  private toKvContext(item: any): { id: string; label: string } | null {
+    if (!item) return null;
+
+    const type = item?.type ?? '';
+    const occupationNameId = item?.occupation_name?.id ?? item?.occupationName?.id ?? item?.occupationId ?? '';
+    const occupationNameLabel = item?.occupation_name?.preferred_label ?? item?.occupationName?.preferred_label ?? item?.occupationLabel ?? '';
+    const conceptId = item?.['taxonomy/id'] ?? item?.conceptId ?? item?.id ?? '';
+    const ssykLevel4Id = item?.ssyk_level_4_id ?? item?.ssykLevel4Id ?? item?.ssyk ?? '';
+    const label = item?.['taxonomy/preferred-label'] ?? item?.preferred_label ?? item?.preferredLabel ?? item?.label ?? '';
+
+    const id = type === 'JobTitle'
+      ? this.resolveKvContextId(occupationNameId, ssykLevel4Id)
+      : this.resolveKvContextId(conceptId, ssykLevel4Id);
+
+    if (!id) return null;
+
+    return {
+      id,
+      label: type === 'JobTitle' ? occupationNameLabel || label : label,
+    };
+  }
+
+  private resolveKvContextId(conceptId: string, ssykLevel4Id: string): string {
+    const kvBase = (window as any).__kvBase;
+    if (conceptId && kvBase?.occupationToSsyk4?.[conceptId]) return conceptId;
+    if (ssykLevel4Id && kvBase?.ssyk4ToSsyk3?.[ssykLevel4Id]) return ssykLevel4Id;
+    return conceptId || ssykLevel4Id || '';
+  }
+
   setPreselected(): void {
-    // Kontrollera att komponenten är redo och har metoden setValuesByLabels
     if (this.multiSelectBox.nativeElement && 'setValuesByLabels' in this.multiSelectBox.nativeElement) {
       this.multiSelectBox.nativeElement.setValuesByLabels(['Läkare', 'Sjuksköterska']);
-    } else {
-      console.error('Metoden setValuesByLabels är inte tillgänglig.');
     }
   }
 
-  // Exempel på att rensa val
   clearSelection(): void {
     if (this.multiSelectBox.nativeElement && 'clearMultiSelection' in this.multiSelectBox.nativeElement) {
       this.multiSelectBox.nativeElement.clearMultiSelection();
-    } else {
-      console.error('Metoden clearMultiSelection är inte tillgänglig.');
     }
-  }
-
-  // --- Playground / Alla features ---
-  @ViewChild('playgroundSelect') playgroundSelect!: ElementRef<any>;
-
-  // Properties
-  pgLabel = 'Playground Yrkesväljare';
-  pgLabelDescription = 'Testa alla inställningar här';
-  pgPlaceholder = 'Sök yrke...';
-  pgEnableMultiple = true;
-  pgRequireSelection = false;
-  pgShowSearchIcon = true;
-  pgMinLength = 3;
-  pgMaxResults = 10;
-  pgErrorMessage = '';
-  
-  // Logs
-  pgLogs: string[] = [];
-
-  // Event handlers
-  handlePgSelection(event: any): void {
-    this.log(`Selection: ${JSON.stringify(event.detail)}`);
-  }
-
-  handlePgStatusChange(event: any): void {
-    this.log(`StatusChange: ${JSON.stringify(event.detail)}`);
-  }
-
-  handlePgDataLoadFailed(event: any): void {
-    this.log(`DataLoadFailed: ${JSON.stringify(event.detail)}`);
-  }
-
-  handlePgValidationChange(event: any): void {
-    this.log(`ValidationChange: ${JSON.stringify(event.detail)}`);
-  }
-
-  // Methods
-  async pgValidate(): Promise<void> {
-    if (this.playgroundSelect?.nativeElement) {
-      const isValid = await this.playgroundSelect.nativeElement.validate();
-      this.log(`Validate() result: ${isValid}`);
-    }
-  }
-
-  async pgSetValueById(id: string): Promise<void> {
-    if (this.playgroundSelect?.nativeElement) {
-      await this.playgroundSelect.nativeElement.setValue(id);
-      this.log(`setValue('${id}') called`);
-    }
-  }
-
-  async pgClear(): Promise<void> {
-    if (this.playgroundSelect?.nativeElement) {
-      await this.playgroundSelect.nativeElement.clearMultiSelection();
-      this.log('clearMultiSelection() called');
-    }
-  }
-
-  private log(message: string): void {
-    const timestamp = new Date().toLocaleTimeString();
-    this.pgLogs.unshift(`[${timestamp}] ${message}`);
-    if (this.pgLogs.length > 20) this.pgLogs.pop();
+    this.setOccupationContext([]);
+    this.multiSelectionResult = 'Väntar på val...';
+    this.skillSelectionResult = 'Väntar på val...';
   }
 }

@@ -1,27 +1,156 @@
-# YrkesvaljarenAngularDemo
+# Angular-exempel: YV flerval till KV
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.17.
+Det här är ett minimalt Angular-exempel som visar hur ett flerval från Yrkesväljaren (YV) skickas vidare som yrkeskontext till Kompetensväljaren (KV).
 
-## Development server
+Exemplet är avsiktligt smalt:
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+- en YV-komponent med flerval
+- en KV-komponent
+- debug-rutor som visar YV-resultat, KV-kontext och KV-resultat
 
-## Code scaffolding
+Det finns inget enkelval och inget playground i exemplet.
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+## Starta lokalt
 
-## Build
+```bash
+npm install
+npm start
+```
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+Öppna:
 
-## Running unit tests
+```txt
+http://localhost:4200/
+```
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+## Paketversioner
 
-## Running end-to-end tests
+Kontrollera versioner med:
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+```bash
+npm ls @taxonomy/kompetensvaljaren @taxonomy/kompetensvaljaren-data-v27 @taxonomy/yrkesvaljaren
+```
 
-## Further help
+KV ska använda minst:
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+```txt
+@taxonomy/kompetensvaljaren@0.1.8
+@taxonomy/kompetensvaljaren-data-v27@0.1.8
+```
+
+Det behövs eftersom `loadBase({ basePath })` används.
+
+## KV-data som Angular asset
+
+I `angular.json` exponeras KV-datapaketets JSON-filer som assets:
+
+```json
+{
+  "glob": "**/*.json",
+  "input": "node_modules/@taxonomy/kompetensvaljaren-data-v27/dist",
+  "output": "/assets/kompetensvaljaren"
+}
+```
+
+Då finns basefilen lokalt här:
+
+```txt
+http://localhost:4200/assets/kompetensvaljaren/kv-base.v1.json
+```
+
+I deploy ska motsvarande URL finnas under appens base path, till exempel:
+
+```txt
+https://example.se/min-app/assets/kompetensvaljaren/kv-base.v1.json
+```
+
+Om den URL:en svarar med HTML (`<!DOCTYPE html>`) i stället för JSON är filerna inte korrekt deployade, eller så rewritas asset-requesten till appens fallback-sida.
+
+## Ladda KV-data i `src/main.ts`
+
+Exemplet laddar komponenterna och registrerar KV-data innan Angular startas:
+
+```ts
+defineDigi(window);
+defineSkillSelector(window);
+defineYrkesvaljaren(window);
+
+const skillsBase = await loadBase({
+  basePath: 'assets/kompetensvaljaren/'
+});
+
+registerSkills(skillsBase);
+```
+
+`basePath` är relativ. Lokalt blir det `/assets/kompetensvaljaren/`. I deploy resolve:as den relativt appens `<base href>`.
+
+Lägg inte app-prefix som `/min-app` i Angulars `assets.output`. Prefixet ska komma från `<base href>` eller från den asset-URL som används i deploy.
+
+## Regeln för YV flerval
+
+Kundens flerval betyder att alla valda yrken är lika viktiga. Därför använder exemplet denna regel:
+
+- exakt ett valt yrke: `af-popular` sätts till `true` och KV visar rekommenderade/vanliga kompetenser för yrket
+- flera valda yrken: `af-popular` sätts till `false` och KV visar ingen rekommenderad lista
+
+Vid flera val används yrkena fortfarande som sökkontext. Den rekommenderade listan stängs bara av för att inget av yrkena ska framstå som viktigare än de andra.
+
+## Mappning till KV:s nuvarande API
+
+KV tar i dag emot upp till fem kontext-id:n via två attribut:
+
+```html
+<digi-service-skill-selector
+  [attr.af-occupation-id]="selectedOccupationId || null"
+  [attr.af-input-ids]="selectedInputIds || null"
+  [attr.af-popular]="showPopular ? 'true' : 'false'">
+</digi-service-skill-selector>
+```
+
+Tekniskt skickas första context-id:t via `af-occupation-id` och upp till fyra ytterligare via `af-input-ids`.
+
+Vid flera val betyder det inte att första yrket är viktigare. Det är bara en mappning till KV:s nuvarande API. Eftersom `af-popular=false` vid flera val visas ingen lista som favoriserar första yrket.
+
+## Vilka id:n ska skickas?
+
+Skicka Taxonomi concept-id:n, inte numeriska SSYK-koder som `2512`.
+
+För `OccupationName`:
+
+1. använd occupation-name-id om KV känner igen det
+2. annars använd SSYK level 4 concept-id som fallback
+
+För `JobTitle`:
+
+1. använd kopplat `occupation_name.id` om det finns
+2. annars använd SSYK level 4 concept-id som fallback
+
+Skicka inte job-title-id:t direkt som KV-kontext.
+
+## Felsökning
+
+### `GET /kv-base.v1.json 404` lokalt
+
+Då kör appen troligen `loadBase()` utan fungerande `basePath`, eller med för gammalt datapaket. Kontrollera `src/main.ts` och paketversionerna.
+
+### Deploy svarar med `text/html` eller `<!DOCTYPE html>`
+
+Då försöker KV läsa JSON men servern svarar med HTML. Kontrollera att denna URL returnerar JSON direkt i browsern:
+
+```txt
+<appens-base-url>/assets/kompetensvaljaren/kv-base.v1.json
+```
+
+Förväntat är `Status: 200` och `Content-Type: application/json`.
+
+### Flera yrken visar inte rekommenderade kompetenser
+
+Det är avsiktligt. Rekommenderade kompetenser baseras på ett yrke. Vid flera lika viktiga yrken stänger exemplet av listan och använder yrkena som sökkontext.
+
+## Viktiga filer
+
+- `src/main.ts`: loader-setup, `loadBase`, `registerSkills`
+- `angular.json`: asset-konfiguration för KV-data
+- `src/app/app.component.ts`: YV till KV-mappning och regeln för `af-popular`
+- `src/app/app.component.html`: komponenterna och attributen
+- `docs/yv-kv-flerval.md`: kort sammanfattning
